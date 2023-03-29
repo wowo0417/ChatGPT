@@ -420,7 +420,7 @@ if __name__ == "__main__":
         if authflag:
             demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
                 share=False,
-                #auth=(username, password),
+                auth=(username, password),
                 favicon_path="./assets/favicon.ico",
                 #inbrowser=True,
                 server_name="0.0.0.0", 
