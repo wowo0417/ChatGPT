@@ -24,8 +24,7 @@ if os.environ.get("dockerrun") == "yes":
 else:
     dockerflag = False
 
-authflag = False
-auth_list = []
+authflag = True
 
 if dockerflag:
     my_api_key = os.environ.get("my_api_key")
@@ -36,7 +35,6 @@ if dockerflag:
     username = os.environ.get("USERNAME")
     password = os.environ.get("PASSWORD")
     if not (isinstance(username, type(None)) or isinstance(password, type(None))):
-        auth_list.append((os.environ.get("USERNAME"), os.environ.get("PASSWORD")))
         authflag = True
 else:
     if (
@@ -47,15 +45,12 @@ else:
         with open("api_key.txt", "r") as f:
             my_api_key = f.read().strip()
     if os.path.exists("auth.json"):
-        authflag = True
         with open("auth.json", "r", encoding='utf-8') as f:
             auth = json.load(f)
-            for _ in auth:
-                if auth[_]["username"] and auth[_]["password"]:
-                    auth_list.append((auth[_]["username"], auth[_]["password"]))
-                else:
-                    logging.error("请检查auth.json文件中的用户名和密码！")
-                    sys.exit(1)
+            username = auth["username"]
+            password = auth["password"]
+            if username != "" and password != "":
+                authflag = True
 
 gr.Chatbot.postprocess = postprocess
 PromptHelper.compact_text_chunks = compact_text_chunks
@@ -76,11 +71,11 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
         gr.HTML(title)
         status_display = gr.Markdown(get_geoip(), elem_id="status_display")
 
-    with gr.Row().style(equal_height=True):
+    with gr.Row(scale=1).style(equal_height=True):
         with gr.Column(scale=5):
-            with gr.Row():
+            with gr.Row(scale=1):
                 chatbot = gr.Chatbot(elem_id="chuanhu_chatbot").style(height="100%")
-            with gr.Row():
+            with gr.Row(scale=1):
                 with gr.Column(scale=12):
                     user_input = gr.Textbox(
                         show_label=False, placeholder="在这里输入"
@@ -88,13 +83,12 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
                 with gr.Column(min_width=70, scale=1):
                     submitBtn = gr.Button("发送", variant="primary")
                     cancelBtn = gr.Button("取消", variant="secondary", visible=False)
-            with gr.Row():
+            with gr.Row(scale=1):
                 emptyBtn = gr.Button(
                     "🧹 新的对话",
                 )
                 retryBtn = gr.Button("🔄 重新生成")
-                delFirstBtn = gr.Button("🗑️ 删除最旧对话")
-                delLastBtn = gr.Button("🗑️ 删除最新对话")
+                delLastBtn = gr.Button("🗑️ 删除一条对话")
                 reduceTokenBtn = gr.Button("♻️ 总结对话")
 
         with gr.Column():
@@ -267,7 +261,7 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
     transfer_input_args = dict(
         fn=transfer_input, inputs=[user_input], outputs=[user_question, user_input, submitBtn, cancelBtn], show_progress=True
     )
-
+    
     get_usage_args = dict(
         fn=get_usage, inputs=[user_api_key], outputs=[usageTxt], show_progress=False
     )
@@ -307,12 +301,6 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
     ).then(**end_outputing_args)
     retryBtn.click(**get_usage_args)
 
-    delFirstBtn.click(
-        delete_first_conversation,
-        [history, token_count],
-        [history, token_count, status_display],
-    )
-
     delLastBtn.click(
         delete_last_conversation,
         [chatbot, history, token_count],
@@ -330,7 +318,7 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
             token_count,
             top_p,
             temperature,
-            gr.State(max_token_streaming//2 if use_streaming_checkbox.value else max_token_all//2),
+            gr.State(0),
             model_select_dropdown,
             language_select_dropdown,
         ],
@@ -338,7 +326,7 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
         show_progress=True,
     )
     reduceTokenBtn.click(**get_usage_args)
-
+    
     # ChatGPT
     keyTxt.change(submit_key, keyTxt, [user_api_key, status_display]).then(**get_usage_args)
 
@@ -403,11 +391,11 @@ with gr.Blocks(css=customCSS, theme=small_and_beautiful_theme) as demo:
 
 logging.info(
     colorama.Back.GREEN
-    + "\n川虎的温馨提示：访问 http://localhost:7860 查看界面"
+    + "\n温馨提示：访问 http://localhost:7860 查看界面"
     + colorama.Style.RESET_ALL
 )
 # 默认开启本地服务器，默认可以直接从IP访问，默认不创建公开分享链接
-demo.title = "川虎ChatGPT 🚀"
+demo.title = "ChatGPT实验室"
 
 if __name__ == "__main__":
     reload_javascript()
@@ -417,7 +405,7 @@ if __name__ == "__main__":
             demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
                 server_name="0.0.0.0",
                 server_port=7860,
-                auth=auth_list,
+                auth=(username, password),
                 favicon_path="./assets/favicon.ico",
             )
         else:
@@ -432,9 +420,11 @@ if __name__ == "__main__":
         if authflag:
             demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
                 share=False,
-                auth=auth_list,
+                #auth=(username, password),
                 favicon_path="./assets/favicon.ico",
-                inbrowser=True,
+                #inbrowser=True,
+                server_name="0.0.0.0", 
+                server_port=7860,
             )
         else:
             demo.queue(concurrency_count=CONCURRENT_COUNT).launch(

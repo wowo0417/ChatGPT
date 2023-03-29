@@ -29,14 +29,9 @@ CONCURRENT_COUNT = 100 # 允许同时使用的用户数量
 SIM_K = 5
 INDEX_QUERY_TEMPRATURE = 1.0
 
-title = """<h1 align="left" style="min-width:200px; margin-top:0;">川虎ChatGPT 🚀</h1>"""
+title = """<h1 align="left" style="min-width:200px; margin-top:0;">ChatGPT实验室</h1>"""
 description = """\
 <div align="center" style="margin:16px 0">
-
-由Bilibili [土川虎虎虎](https://space.bilibili.com/29125536) 和 [明昭MZhao](https://space.bilibili.com/24807452)开发
-
-访问川虎ChatGPT的 [GitHub项目](https://github.com/GaiZhenbiao/ChuanhuChatGPT) 下载最新版脚本
-
 此App使用 `gpt-3.5-turbo` 大语言模型
 </div>
 """
@@ -46,10 +41,10 @@ summarize_prompt = "你是谁？我们刚才聊了什么？"  # 总结对话时�
 MODELS = [
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-0301",
-    "gpt-4",
-    "gpt-4-0314",
-    "gpt-4-32k",
-    "gpt-4-32k-0314",
+    #"gpt-4",
+    #"gpt-4-0314",
+    #"gpt-4-32k",
+    #"gpt-4-32k-0314",
 ]  # 可选的模型
 
 REPLY_LANGUAGES = [
